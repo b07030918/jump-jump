@@ -1,9 +1,10 @@
-use bevy::prelude::*;
+use bevy::{prelude::*};
 
 use crate::player::{JumpState, INITIAL_PLAYER_POS};
 
-#[derive(Debug, Clone, Eq, PartialEq, Hash)]
-pub enum GameState {
+#[derive(Debug, Clone, Eq, PartialEq, Hash, States, Default)]
+pub enum GameState{
+    #[default]
     MainMenu,
     Playing,
     GameOver,
@@ -243,7 +244,7 @@ pub fn update_scoreboard(score: Res<Score>, mut query: Query<&mut Text, With<Sco
 pub fn sync_score_up_effect(
     mut q_score_up_effect: Query<(&mut Style, &mut ScoreUpEffect)>,
     q_camera: Query<(&Camera, &GlobalTransform), With<Camera3d>>,
-    windows: Res<Windows>,
+    windows: Query<&Window>,
 ) {
     let (camera, camera_global_transform) = q_camera.single();
     for (mut score_up_effect_style, score_up_effect) in &mut q_score_up_effect {
@@ -251,7 +252,7 @@ pub fn sync_score_up_effect(
             .world_to_viewport(camera_global_transform, score_up_effect.0)
             .unwrap();
         score_up_effect_style.position = UiRect {
-            top: Val::Px(windows.primary().height() - viewport_pos.y),
+            top: Val::Px(windows.single().height() - viewport_pos.y),
             left: Val::Px(viewport_pos.x),
             ..default()
         };
@@ -280,7 +281,7 @@ pub fn spawn_score_up_effect(
     mut score_up_queue: ResMut<ScoreUpQueue>,
     jump_state: Res<JumpState>,
     q_camera: Query<(&Camera, &GlobalTransform), With<Camera3d>>,
-    windows: Res<Windows>,
+    windows: Query<&Window>,
 ) {
     if jump_state.completed {
         // 启动score up动画
@@ -302,7 +303,7 @@ pub fn spawn_score_up_effect(
                 .with_style(Style {
                     position_type: PositionType::Absolute,
                     position: UiRect {
-                        top: Val::Px(windows.primary().height() - viewport_pos.y),
+                        top: Val::Px(windows.single().height() - viewport_pos.y),
                         left: Val::Px(viewport_pos.x),
                         ..default()
                     },
@@ -320,22 +321,22 @@ pub fn click_button(
         (&Interaction, &MenuButtonAction),
         (Changed<Interaction>, With<Button>),
     >,
-    mut game_state: ResMut<State<GameState>>,
+    mut game_state: ResMut<NextState<GameState>>,
 ) {
     for (interaction, menu_button_action) in &mut interaction_query {
         match *interaction {
             Interaction::Clicked => match menu_button_action {
                 MenuButtonAction::StartGame => {
                     info!("StartGame button clicked");
-                    game_state.set(GameState::Playing).unwrap();
+                    game_state.set(GameState::Playing);
                 }
                 MenuButtonAction::RestartGame => {
                     info!("RestartGame button clicked");
-                    game_state.set(GameState::Playing).unwrap();
+                    game_state.set(GameState::Playing);
                 }
                 MenuButtonAction::BackToMainMenu => {
                     info!("BackToMainMenu button clicked");
-                    game_state.set(GameState::MainMenu).unwrap();
+                    game_state.set(GameState::MainMenu);
                 }
             },
             _ => {}

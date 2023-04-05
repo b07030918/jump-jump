@@ -62,7 +62,7 @@ pub fn setup_ground(
 ) {
     // 地面
     commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Plane { size: 1000000.0 })),
+        mesh: meshes.add(Mesh::from(shape::Plane { size: 1000000.0, ..default() })),
         material: materials.add(Color::rgb(0.95, 0.87, 0.88).into()),
         ..default()
     });

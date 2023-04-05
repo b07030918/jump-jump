@@ -350,7 +350,7 @@ pub fn animate_fall(
     mut fall_state: ResMut<FallState>,
     jump_state: Res<JumpState>,
     time: Res<Time>,
-    mut game_state: ResMut<State<GameState>>,
+    mut game_state: ResMut<NextState<GameState>>,
     mut q_player: Query<&mut Transform, With<Player>>,
     audio: Res<Audio>,
     game_sounds: Res<GameSounds>,
@@ -367,7 +367,7 @@ pub fn animate_fall(
                     // 已摔落在地
                     fall_state.completed = true;
                     info!("Game over!");
-                    game_state.set(GameState::GameOver).unwrap();
+                    game_state.set(GameState::GameOver);
                 } else {
                     player.translation.y -= 0.7 * time.delta_seconds();
                 }
@@ -395,86 +395,12 @@ pub fn animate_fall(
                         // 已摔落在地
                         fall_state.completed = true;
                         info!("Game over!");
-                        game_state.set(GameState::GameOver).unwrap();
+                        game_state.set(GameState::GameOver);
                     } else {
                         player.translation.y -= 0.7 * time.delta_seconds();
                     }
                 }
             }
-        }
-    }
-}
-
-pub fn animate_accumulation_particle_effect(
-    mut commands: Commands,
-    mut effects: ResMut<Assets<EffectAsset>>,
-    accumulator: Res<Accumulator>,
-    mut effect_timer: ResMut<GenerateAccumulationParticleEffectTimer>,
-    time: Res<Time>,
-    mut q_effect: Query<(Entity, &mut ParticleEffect, &mut Transform)>,
-    q_player: Query<&Transform, (With<Player>, Without<ParticleEffect>)>,
-) {
-    if accumulator.0.is_some() {
-        // 生成粒子特效
-        effect_timer.0.tick(time.delta());
-        if effect_timer.0.just_finished() {
-            let player = q_player.single();
-            let mut color_gradient = Gradient::new();
-            color_gradient.add_key(0.0, Vec4::new(4.0, 4.0, 4.0, 1.0));
-            color_gradient.add_key(0.1, Vec4::new(4.0, 4.0, 0.0, 1.0));
-            color_gradient.add_key(0.9, Vec4::new(4.0, 0.0, 0.0, 1.0));
-            color_gradient.add_key(1.0, Vec4::new(4.0, 0.0, 0.0, 0.0));
-
-            let mut size_gradient = Gradient::new();
-            size_gradient.add_key(0.0, Vec2::splat(0.05));
-            size_gradient.add_key(0.3, Vec2::splat(0.05));
-            size_gradient.add_key(1.0, Vec2::splat(0.0));
-
-            let name = format!("accumulation{}", time.elapsed_seconds() as u32);
-            let effect = effects.add(
-                EffectAsset {
-                    name: name.clone(),
-                    capacity: 3,
-                    spawner: Spawner::once(3.0.into(), true),
-                    ..Default::default()
-                }
-                .init(PositionSphereModifier {
-                    dimension: ShapeDimension::Volume,
-                    radius: 1.0,
-                    center: player.translation,
-                    ..default()
-                })
-                .init(ParticleLifetimeModifier { lifetime: 2. })
-                .update(LinearDragModifier { drag: 8. })
-                .update(ForceFieldModifier::new(vec![ForceFieldSource {
-                    position: player.translation,
-                    max_radius: 10.0,
-                    min_radius: 0.0,
-                    mass: 6.0,
-                    force_exponent: 0.3,
-                    conform_to_sphere: false,
-                }]))
-                .render(ColorOverLifetimeModifier {
-                    gradient: color_gradient.clone(),
-                })
-                .render(SizeOverLifetimeModifier {
-                    gradient: size_gradient.clone(),
-                }),
-            );
-            commands.spawn((
-                Name::new(name),
-                ParticleEffectBundle {
-                    effect: ParticleEffect::new(effect),
-                    transform: Transform::IDENTITY,
-                    ..Default::default()
-                },
-            ));
-            effect_timer.0.reset();
-        }
-    } else {
-        // 关闭粒子特效
-        for (entity, _, _) in &mut q_effect {
-            commands.entity(entity).despawn();
         }
     }
 }
