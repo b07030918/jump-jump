@@ -2,7 +2,7 @@ use bevy::{core_pipeline::bloom::BloomSettings, prelude::*};
 
 use crate::player::{FallState, JumpState, Player, INITIAL_PLAYER_POS};
 
-pub const INITIAL_CAMERA_POS: Vec3 = Vec3::new(-5.0, 8.0, 5.0);
+pub const INITIAL_CAMERA_POS: Vec3 = Vec3::new(0.0, 18.0, 5.0);
 
 #[derive(Debug, Resource)]
 pub struct CameraMoveState {
@@ -25,7 +25,7 @@ pub fn setup_camera(mut commands: Commands) {
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             illuminance: 15000.0,
-            shadows_enabled: true,
+            //shadows_enabled: true,
             ..default()
         },
         transform: Transform::from_xyz(2.0, 10.0, 8.0).looking_at(Vec3::ZERO, Vec3::Y),
@@ -43,16 +43,11 @@ pub fn setup_camera(mut commands: Commands) {
     let mut camera_command = commands.spawn((Camera3dBundle {
         transform: Transform::from_translation(INITIAL_CAMERA_POS).looking_at(Vec3::ZERO, Vec3::Y),
         camera: Camera {
-            hdr: hdr,
+            //hdr: hdr,
             ..default()
         },
         ..default()
     },));
-
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        camera_command.insert(BloomSettings::default());
-    }
 }
 
 pub fn setup_ground(
@@ -80,6 +75,7 @@ pub fn move_camera(
     if jump_state.completed && fall_state.completed {
         let player = q_player.single();
         let mut camera = q_camera.single_mut();
+        //初始位置+人的位置
         let camera_destination = INITIAL_CAMERA_POS + player.translation;
 
         // 检测player是否移动，重新计算step
@@ -89,8 +85,8 @@ pub fn move_camera(
             camera_move_state.player_pos = player.translation;
         }
 
-        if camera.translation.distance(camera_destination)
-            > Vec3::ZERO.distance(camera_move_state.step)
+        //渲染慢慢移动的效果
+        if camera.translation.distance(camera_destination) > Vec3::ZERO.distance(camera_move_state.step)
         {
             camera.translation = camera.translation + camera_move_state.step;
         }

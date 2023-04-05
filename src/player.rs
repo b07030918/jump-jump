@@ -72,6 +72,7 @@ pub enum FallType {
     // 先倾斜再下落，Vec3代表倾斜方向
     Tilt(Vec3),
 }
+
 impl Default for FallState {
     fn default() -> Self {
         Self {
@@ -91,6 +92,7 @@ impl FallState {
         self.completed = false;
         self.played_sound = false;
     }
+    
     pub fn animate_tilt_fall(&mut self, pos: Vec3, direction: Vec3) {
         info!("Start tilt fall!");
         self.pos = pos;
@@ -104,8 +106,8 @@ impl FallState {
 #[derive(Debug, Component)]
 pub struct Player;
 
-#[derive(Debug, Resource)]
-pub struct GenerateAccumulationParticleEffectTimer(pub Timer);
+//#[derive(Debug, Resource)]
+//pub struct GenerateAccumulationParticleEffectTimer(pub Timer);
 
 pub fn setup_player(
     mut commands: Commands,
@@ -135,7 +137,7 @@ pub fn setup_player(
 
 pub fn player_jump(
     mut commands: Commands,
-    buttons: Res<Input<MouseButton>>,
+    buttons: Res<Input<KeyCode>>,
     mut score: ResMut<Score>,
     mut accumulator: ResMut<Accumulator>,
     mut jump_state: ResMut<JumpState>,
@@ -149,9 +151,7 @@ pub fn player_jump(
     game_sounds: Res<GameSounds>,
     q_player: Query<&Transform, With<Player>>,
     q_current_platform: Query<(Entity, &Transform, &PlatformShape), With<CurrentPlatform>>,
-    q_next_platform: Query<
-        (Entity, &Transform, &PlatformShape),
-        (With<NextPlatform>, Without<Player>),
+    q_next_platform: Query<(Entity, &Transform, &PlatformShape),(With<NextPlatform>, Without<Player>),
     >,
 ) {
     if !prepare_jump_timer.0.finished() {
@@ -159,19 +159,19 @@ pub fn player_jump(
         return;
     }
     // 如果上一跳未完成则忽略
-    if buttons.just_pressed(MouseButton::Left) && jump_state.completed && fall_state.completed {
+    if buttons.just_pressed(KeyCode::Space) && jump_state.completed && fall_state.completed {
         // 开始蓄力
         accumulator.0 = time.last_update();
-        accumulation_sound_controller.0 =
-            Some(audio_sinks.get_handle(audio.play(game_sounds.accumulation.clone())));
+        accumulation_sound_controller.0 = Some(audio_sinks.get_handle(audio.play(game_sounds.accumulation.clone())));
     }
-    if buttons.just_released(MouseButton::Left) && jump_state.completed && fall_state.completed && accumulator.0.is_some() {
+
+    if buttons.just_released(KeyCode::Space) && jump_state.completed && fall_state.completed && accumulator.0.is_some() {
         if q_next_platform.is_empty() {
             warn!("There is no next platform");
             return;
         }
-        let (current_platform_entity, current_platform, current_platform_shape) =
-            q_current_platform.single();
+
+        let (current_platform_entity, current_platform, current_platform_shape) = q_current_platform.single();
         let (next_platform_entity, next_platform, next_platform_shape) = q_next_platform.single();
         let player = q_player.single();
 
@@ -180,13 +180,11 @@ pub fn player_jump(
             Vec3::new(
                 player.translation.x,
                 INITIAL_PLAYER_POS.y,
-                player.translation.z
-                    - 3.0 * accumulator.0.as_ref().unwrap().elapsed().as_secs_f32(),
+                player.translation.z - 3.0 * accumulator.0.as_ref().unwrap().elapsed().as_secs_f32(),
             )
         } else {
             Vec3::new(
-                player.translation.x
-                    + 3.0 * accumulator.0.as_ref().unwrap().elapsed().as_secs_f32(),
+                player.translation.x + 3.0 * accumulator.0.as_ref().unwrap().elapsed().as_secs_f32(),
                 INITIAL_PLAYER_POS.y,
                 player.translation.z,
             )
@@ -210,17 +208,11 @@ pub fn player_jump(
             if next_platform_shape.is_landed_on_platform(next_platform.translation, landing_pos) {
                 // 分数加1
                 score.0 += 1;
-                score_up_queue.0.push(ScoreUpEvent { pos: Vec3::new(landing_pos.x, landing_pos.y + 0.5, landing_pos.z) });
+                score_up_queue.0.push(ScoreUpEvent { pos: Vec3::new(landing_pos.x, landing_pos.y + 1.5, landing_pos.z) });
 
-                commands
-                    .entity(next_platform_entity)
-                    .remove::<NextPlatform>();
-                commands
-                    .entity(next_platform_entity)
-                    .insert(CurrentPlatform);
-                commands
-                    .entity(current_platform_entity)
-                    .remove::<CurrentPlatform>();
+                commands.entity(next_platform_entity).remove::<NextPlatform>();
+                commands.entity(next_platform_entity).insert(CurrentPlatform);
+                commands.entity(current_platform_entity).remove::<CurrentPlatform>();
             }
 
         // 蓄力不足或蓄力过度，角色摔落
@@ -276,6 +268,7 @@ pub fn player_jump(
     }
 }
 
+//跳跃效果
 pub fn animate_jump(
     mut jump_state: ResMut<JumpState>,
     time: Res<Time>,
@@ -318,10 +311,7 @@ pub fn animate_jump(
             player.translate_around(around_point, quat);
 
             // 自身旋转
-            player.rotate_local_axis(
-                rotate_axis,
-                -(1.0 / jump_state.animation_duration) * TAU * time.delta_seconds(),
-            );
+            player.rotate_local_axis(rotate_axis, -(1.0 / jump_state.animation_duration) * TAU * time.delta_seconds(),);
         }
     }
 }

@@ -33,12 +33,17 @@ pub enum MenuButtonAction {
     BackToMainMenu,
 }
 
+//开始页面
 #[derive(Component)]
 pub struct OnMainMenuScreen;
+
+//结束页面
 #[derive(Component)]
 pub struct OnGameOverMenuScreen;
 
 #[derive(Debug, Resource)]
+
+//分数
 pub struct Score(pub u32);
 
 #[derive(Debug, Component)]
@@ -72,9 +77,9 @@ pub fn setup_game_sounds(mut commands: Commands, assert_server: Res<AssetServer>
     });
 }
 
+//开始界面
 pub fn setup_main_menu(mut commands: Commands, ui_images: Res<UiImageHandles>) {
-    commands
-        .spawn((
+    commands.spawn((
             NodeBundle {
                 style: Style {
                     size: Size::new(Val::Percent(100.), Val::Percent(100.)),
@@ -85,18 +90,15 @@ pub fn setup_main_menu(mut commands: Commands, ui_images: Res<UiImageHandles>) {
                 ..default()
             },
             OnMainMenuScreen,
-        ))
-        .with_children(|parent| {
-            parent
-                .spawn(NodeBundle {
+        )).with_children(|parent| {
+            parent.spawn(NodeBundle {
                     style: Style {
                         flex_direction: FlexDirection::Column,
                         align_items: AlignItems::Center,
                         ..default()
                     },
                     ..default()
-                })
-                .with_children(|parent| {
+                }).with_children(|parent| {
                     // 标题
                     parent.spawn(ImageBundle {
                         image: ui_images.title.clone().into(),
@@ -122,9 +124,9 @@ pub fn setup_main_menu(mut commands: Commands, ui_images: Res<UiImageHandles>) {
         });
 }
 
+//结束页面
 pub fn setup_game_over_menu(mut commands: Commands, ui_images: Res<UiImageHandles>) {
-    commands
-        .spawn((
+    commands.spawn((
             NodeBundle {
                 style: Style {
                     size: Size::new(Val::Percent(100.), Val::Percent(100.)),
@@ -135,34 +137,29 @@ pub fn setup_game_over_menu(mut commands: Commands, ui_images: Res<UiImageHandle
                 ..default()
             },
             OnGameOverMenuScreen,
-        ))
-        .with_children(|parent| {
-            parent
-                .spawn(NodeBundle {
+        )).with_children(|parent| {
+            parent.spawn(NodeBundle {
                     style: Style {
                         flex_direction: FlexDirection::Column,
                         align_items: AlignItems::Center,
                         ..default()
                     },
                     ..default()
-                })
-                .with_children(|parent| {
+                }).with_children(|parent| {
                     // 标题
                     parent.spawn(ImageBundle {
                         image: ui_images.title.clone().into(),
                         ..default()
                     });
 
-                    parent
-                        .spawn(NodeBundle {
+                    parent.spawn(NodeBundle {
                             style: Style {
                                 flex_direction: FlexDirection::Row,
                                 align_items: AlignItems::Center,
                                 ..default()
                             },
                             ..default()
-                        })
-                        .with_children(|parent| {
+                        }).with_children(|parent| {
                             // 返回按钮
                             parent.spawn((
                                 ButtonBundle {
@@ -200,8 +197,7 @@ pub fn setup_game_over_menu(mut commands: Commands, ui_images: Res<UiImageHandle
 }
 
 pub fn setup_scoreboard(mut commands: Commands, asset_server: Res<AssetServer>) {
-    commands
-        .spawn(
+    commands.spawn(
             TextBundle::from_sections([
                 TextSection::new(
                     "Score: ",
@@ -219,8 +215,7 @@ pub fn setup_scoreboard(mut commands: Commands, asset_server: Res<AssetServer>) 
                         color: Color::rgb(1.0, 0.5, 0.5),
                     },
                 ),
-            ])
-            .with_style(Style {
+            ]).with_style(Style {
                 position_type: PositionType::Absolute,
                 position: UiRect {
                     top: Val::Px(30.0),
@@ -229,8 +224,7 @@ pub fn setup_scoreboard(mut commands: Commands, asset_server: Res<AssetServer>) 
                 },
                 ..default()
             }),
-        )
-        .insert(Scoreboard);
+        ).insert(Scoreboard);
 }
 
 pub fn update_scoreboard(score: Res<Score>, mut query: Query<&mut Text, With<Scoreboard>>) {
@@ -317,10 +311,7 @@ pub fn spawn_score_up_effect(
 }
 
 pub fn click_button(
-    mut interaction_query: Query<
-        (&Interaction, &MenuButtonAction),
-        (Changed<Interaction>, With<Button>),
-    >,
+    mut interaction_query: Query<(&Interaction, &MenuButtonAction),(Changed<Interaction>, With<Button>),>,
     mut game_state: ResMut<NextState<GameState>>,
 ) {
     for (interaction, menu_button_action) in &mut interaction_query {

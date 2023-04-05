@@ -40,6 +40,7 @@ impl PlatformShape {
             }
         }
     }
+
     // 是否接触到角色
     pub fn is_touched_player(
         &self,
@@ -89,7 +90,8 @@ pub fn generate_next_platform(
     if q_next_platform.is_empty() {
         for current_platform in &q_current_platform {
             let mut rng = rand::thread_rng();
-            let rand_distance = rng.gen_range(2.5..4.0);
+            let rand_distance = rng.gen_range(2.5..2.6);
+            
             let next_pos = if rng.gen_bool(0.5) {
                 Vec3::new(
                     current_platform.translation.x + rand_distance,
@@ -128,8 +130,7 @@ pub fn animate_platform_accumulation(
     let mut current_platform = q_current_platform.single_mut();
     match accumulator.0 {
         Some(_) => {
-            current_platform.scale.y =
-                (current_platform.scale.y - 0.15 * time.delta_seconds()).max(0.6);
+            current_platform.scale.y =(current_platform.scale.y - 0.15 * time.delta_seconds()).max(0.6);
         }
         None => {
             // TODO 回弹效果
@@ -144,6 +145,7 @@ pub fn clear_platforms(mut commands: Commands, q_platforms: Query<Entity, With<P
     }
 }
 
+//平台随机颜色
 fn rand_platform_color() -> Color {
     let mut rng = rand::thread_rng();
     Color::rgb(rng.gen(), rng.gen(), rng.gen())
